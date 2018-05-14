@@ -1,0 +1,89 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no">
+        <script src=https://code.jquery.com/jquery-3.3.1.min.js></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <style>
+            #msg_box{
+                max-width: 60%;
+                height: 90%;
+            }
+            #user_box{
+                max-width:35%;
+                height: 90%;
+            }
+        </style>
+        <script>
+            $(document).ready(function(){
+                $('#chat').hide();
+            });
+        </script>
+        <script>
+            var socket = io();
+            var id ="!@#$%^&*()";
+            function id_send(){
+                id=document.getElementById('id_box').value;
+                document.getElementById('id_box').value="";
+                $('#id').hide();
+                $('#chat').show();
+                socket.emit("join",id);
+            }
+            function login_enter(){
+                if(event.keyCode==13){
+                    id_send();
+                }
+            }
+            window.onload=function(){
+                socket.on("connection",function (data){
+                    console.log(data);
+                });
+                socket.on("broadcast",function (data){
+                    var box = document.getElementById('msg_box').value;
+                    document.getElementById('msg_box').value+=data+"\n";
+                });
+                socket.on("user",function (data){
+                    document.getElementById('user_box').value=data+"\n";
+                });
+                socket.on("load_user",function(data){
+                    if(id=="!@#$%^&*()"){
+                        $('#id').show();
+                        $('#chat').hide();
+                        return false;
+                    }
+                    socket.emit("load",id);
+                });
+            }
+            function send(){
+                var msg=document.getElementById('send_box').value;
+                if(id=="!@#$%^&*()"){
+                    $('#id').show();
+                    $('#chat').hide();
+                    document.getElementById('send_box').value="";
+                    return false;
+                }
+                socket.emit("msg",msg);
+                console.log(msg);
+                document.getElementById('send_box').value="";
+            }
+            function enter_event(){
+                if(event.keyCode==13){
+                    send();
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div id="id">
+            아이디를 입력하여 주세요.<br>
+            <input type="text" id="id_box" onkeydown="login_enter()">
+            <button onclick="id_send()">확인</button>
+        </div>
+        <div id="chat">
+            <textarea id="msg_box" cols="40" rows="10" readonly></textarea>
+            <textarea id="user_box" cols="10" rows="10" readonly></textarea><br>
+            <input type="text" id="send_box" onkeydown="enter_event()" >
+            <button onclick="send()">Send</button>
+        </div>
+    </body>
+</html>
